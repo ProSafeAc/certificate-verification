@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Certificate Verification System</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{--ink:#17202a;--muted:#68727d;--line:#dfe4e8;--bg:#f4f6f8;--card:#fff;--accent:#1d5f8f;--ok:#18864b}
+*{box-sizing:border-box} body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:#102c43;color:white;padding:24px 6%;display:flex;justify-content:space-between;align-items:center}
+header h1{margin:0;font-size:23px} header span{opacity:.8;font-size:13px}
+.wrap{max-width:1100px;margin:35px auto;padding:0 20px}.grid{display:grid;grid-template-columns:1.2fr .8fr;gap:24px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:25px;box-shadow:0 8px 28px #17202a0b}
+h2{margin-top:0;font-size:19px} label{display:block;font-size:13px;font-weight:bold;margin:17px 0 7px}
+input{width:100%;padding:13px;border:1px solid #cbd3da;border-radius:8px;font-size:15px}
+button{border:0;border-radius:8px;padding:12px 16px;font-weight:bold;cursor:pointer}
+.primary{background:var(--accent);color:#fff}.secondary{background:#edf1f4;color:var(--ink)}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}.result{display:none}.qrbox{min-height:290px;display:flex;align-items:center;justify-content:center;border:1px dashed #c8d0d7;border-radius:10px;background:#fafbfc}
+#qrcode{padding:12px;background:white}.url{word-break:break-all;background:#f3f5f7;padding:12px;border-radius:8px;font-size:13px;margin-top:15px}
+.badge{display:inline-block;background:#e6f6ed;color:var(--ok);font-weight:bold;padding:6px 9px;border-radius:20px;font-size:12px}
+.verify{margin-top:24px}.verify-result{display:none;border-left:4px solid var(--ok);padding:16px;background:#f3fbf6}
+small{color:var(--muted)} footer{text-align:center;color:var(--muted);font-size:12px;padding:30px}
+@media(max-width:800px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Training Certificate Verification</h1>
+  <span>Professional QR Certificate System</span>
+</header>
+
+<div class="wrap">
+  <div class="grid">
+    <section class="card">
+      <h2>Generate Certificate QR Code</h2>
+      <small>Enter a unique certificate number. The system creates a verification link and QR code.</small>
+
+      <label>Certificate Number *</label>
+      <input id="cert" placeholder="e.g. TC-2026-00125">
+
+      <label>Learner Name</label>
+      <input id="learner" placeholder="e.g. John Smith">
+
+      <label>Course / Training</label>
+      <input id="course" placeholder="e.g. Occupational Health & Safety">
+
+      <label>Date Issued</label>
+      <input id="date" type="date">
+
+      <label>Verification Website</label>
+      <input id="base" value="https://yourdomain.co.za/verify/">
+
+      <div class="row">
+        <button class="primary" onclick="generate()">Generate QR Code</button>
+        <button class="secondary" onclick="clearAll()">Clear</button>
+      </div>
+
+      <div id="result" class="result">
+        <h3>Verification Link</h3>
+        <div class="url" id="url"></div>
+        <div class="row">
+          <button class="primary" onclick="copyLink()">Copy Link</button>
+          <button class="secondary" onclick="downloadQR()">Download QR PNG</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>QR Code Preview</h2>
+      <div class="qrbox"><div id="qrcode"></div></div>
+      <p><span class="badge">✓ VERIFICATION ENABLED</span></p>
+      <small>Print the QR code on the certificate. Scanning it should open the verification page on your website.</small>
+    </section>
+  </div>
+
+  <section class="card verify">
+    <h2>Verification Page Preview</h2>
+    <small>This preview shows what a person should see after scanning a certificate QR code.</small>
+    <div id="verifyResult" class="verify-result">
+      <div class="badge">✓ VALID CERTIFICATE</div>
+      <p><strong>Certificate Number:</strong> <span id="vCert"></span></p>
+      <p><strong>Learner:</strong> <span id="vLearner"></span></p>
+      <p><strong>Training:</strong> <span id="vCourse"></span></p>
+      <p><strong>Date Issued:</strong> <span id="vDate"></span></p>
+      <p><strong>Status:</strong> Valid</p>
+    </div>
+  </section>
+</div>
+
+<footer>Replace yourdomain.co.za with your real verification domain before publishing.</footer>
+
+<script>
+let currentUrl="";
+function generate(){
+ const cert=document.getElementById('cert').value.trim();
+ if(!cert){alert("Please enter a certificate number.");return}
+ const base=document.getElementById('base').value.trim().replace(/\/+$/,'')+'/';
+ const url=base+encodeURIComponent(cert);
+ currentUrl=url;
+ document.getElementById('url').textContent=url;
+ document.getElementById('result').style.display='block';
+
+ const qr=document.getElementById('qrcode'); qr.innerHTML='';
+ new QRCode(qr,{text:url,width:250,height:250,correctLevel:QRCode.CorrectLevel.H});
+ document.getElementById('vCert').textContent=cert;
+ document.getElementById('vLearner').textContent=document.getElementById('learner').value||'—';
+ document.getElementById('vCourse').textContent=document.getElementById('course').value||'—';
+ document.getElementById('vDate').textContent=document.getElementById('date').value||'—';
+ document.getElementById('verifyResult').style.display='block';
+}
+function copyLink(){navigator.clipboard.writeText(currentUrl).then(()=>alert("Verification link copied."))}
+function downloadQR(){
+ const img=document.querySelector('#qrcode img');
+ if(!img){alert("Generate a QR code first.");return}
+ const a=document.createElement('a'); a.href=img.src; a.download=(document.getElementById('cert').value||'certificate')+'-QR.png'; a.click();
+}
+function clearAll(){
+ ['cert','learner','course'].forEach(id=>document.getElementById(id).value='');
+ document.getElementById('date').value='';
+ document.getElementById('result').style.display='none';
+ document.getElementById('verifyResult').style.display='none';
+ document.getElementById('qrcode').innerHTML='';
+}
+</script>
+</body>
+</html>
